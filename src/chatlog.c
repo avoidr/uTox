@@ -40,7 +40,7 @@ size_t utox_save_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], uint8_t *data, size_
     // (and he really doesn't want uTox eating people's chat logs)
     fseeko(fp, 0, SEEK_SET);
     fseeko(fp, 0, SEEK_END);
-    off_t offset = ftello(fp);
+    off_t offset = file_pos(fp);
     fwrite(data, length, 1, fp);
     fclose(fp);
 
@@ -129,7 +129,7 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             fseeko(file, header.msg_length, SEEK_CUR);    /* Skip the message */
             fseeko(file, 1, SEEK_CUR);                    /* Skip the newline char */
             start_at--;
-            file_offset = ftello(file);
+            file_offset = file_pos(file);
             continue;
         }
 
@@ -198,7 +198,7 @@ MSG_HEADER **utox_load_chatlog(char hex[TOX_PUBLIC_KEY_SIZE * 2], size_t *size, 
             --count;
             ++actual_count;
             fseeko(file, 1, SEEK_CUR); /* seek an extra \n char */
-            file_offset = ftello(file);
+            file_offset = file_pos(file);
         }
     }
 

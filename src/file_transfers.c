@@ -1116,7 +1116,7 @@ uint32_t ft_send_file(Tox *tox, uint32_t friend_number, FILE *file, uint8_t *pat
     }
 
     fseeko(file, 0, SEEK_END);
-    size_t size = ftello(file);
+    size_t size = file_pos(file);
 
     const uint8_t *name = path + path_length;
     size_t name_length = 0;

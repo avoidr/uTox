@@ -46,5 +46,6 @@ void flush_file(FILE *file);
 int ch_mod(uint8_t *file);
 int file_lock(FILE *file, uint64_t start, size_t length);
 int file_unlock(FILE *file, uint64_t start, size_t length);
+size_t file_pos(FILE *file);
 
 #endif

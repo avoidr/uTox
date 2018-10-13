@@ -91,6 +91,10 @@ FILE *native_get_file_simple(const char *path, UTOX_FILE_OPTS opts) {
     return f;
 }
 
+size_t file_pos(FILE *file) {
+    return _ftelli64(file);
+}
+
 FILE *native_get_file(const uint8_t *name, size_t *size, UTOX_FILE_OPTS opts, bool portable_mode) {
     char path[UTOX_FILE_NAME_LENGTH] = { 0 };
 
@@ -173,7 +177,7 @@ FILE *native_get_file(const uint8_t *name, size_t *size, UTOX_FILE_OPTS opts, bo
 
     if (size && opts & UTOX_FILE_OPTS_READ) {
         fseek(fp, 0, SEEK_END);
-        *size = ftell(fp);
+        *size = file_pos(fp);
         fseek(fp, 0, SEEK_SET);
     }
 

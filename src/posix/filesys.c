@@ -181,3 +181,7 @@ bool native_move_file(const uint8_t *current_name, const uint8_t *new_name) {
 
     return rename((char *)current_name, (char *)new_name);
 }
+
+size_t file_pos(FILE *file) {
+    return ftello(file);
+}
