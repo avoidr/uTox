@@ -91,7 +91,7 @@ FILE *native_get_file_simple(const char *path, UTOX_FILE_OPTS opts) {
     return f;
 }
 
-size_t file_pos(FILE *file) {
+off_t file_pos(FILE *file) {
     return _ftelli64(file);
 }
 
