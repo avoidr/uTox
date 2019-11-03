@@ -12,6 +12,17 @@
 
 static void font_info_open(FONT_INFO *i, FcPattern *pattern);
 
+static void store_ximage(XImage *img) {
+    XImage **p;
+    p = realloc(font_garbage.imgs, (font_garbage.imgs_size + 1) * sizeof(XImage *));
+    if (p) {
+        p[font_garbage.imgs_size] = img;
+        ++font_garbage.imgs_size;
+        font_garbage.imgs = p;
+        printf("Stored image: %p\n", img);
+    }
+}
+
 Picture loadglyphpic(uint8_t *data, int width, int height, int pitch, bool no_subpixel, bool vertical,
                      bool swap_blue_red) {
     if (!width || !height) {
@@ -73,6 +84,7 @@ Picture loadglyphpic(uint8_t *data, int width, int height, int pitch, bool no_su
         free(rgbx);
     }
 
+    store_ximage(img);
     XFreeGC(display, legc);
     XFreePixmap(display, pixmap);
 
@@ -83,6 +95,7 @@ GLYPH *font_getglyph(FONT *f, uint32_t ch) {
     uint32_t hash = ch % 128;
     GLYPH *  g = f->glyphs[hash], *s = g;
     if (g) {
+        /* TODO put s here */
         while (g->ucs4 != ~0u) {
             if (g->ucs4 == ch) {
                 return g;
@@ -421,6 +434,17 @@ void loadfonts(void) {
 }
 
 void freefonts(void) {
+    printf("imgs_size: %zu\n", font_garbage.imgs_size);
+    for (size_t i = 0; i < font_garbage.imgs_size; ++i) {
+        printf("Trying to destroy image: %p\n", font_garbage.imgs[i]);
+        fflush(stdout);
+        if (font_garbage.imgs[i]) {
+            XDestroyImage(font_garbage.imgs[i]);
+            font_garbage.imgs[i] = NULL;
+        }
+    }
+    font_garbage.imgs_size = 0;
+
     for (size_t i = 0; i < COUNTOF(font); i++) {
         FONT *f = &font[i];
         if (f->pattern) {

@@ -31,6 +31,11 @@ typedef struct {
     GLYPH *    glyphs[128];
 } FONT;
 
+struct {
+    XImage **imgs;
+    size_t   imgs_size;
+} font_garbage;
+
 FT_Library ftlib;
 FONT       font[16], *sfont;
 FcCharSet *charset;
