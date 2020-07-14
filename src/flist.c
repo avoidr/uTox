@@ -283,13 +283,16 @@ void flist_update_shown_list(void) {
 
 /* returns address of item at current index and appends the group create entry */
 static ITEM *newitem(void) {
+    const uint32_t sel_idx = selected_item - item;
+
     item       = realloc(item, (itemcount + 1) * sizeof(ITEM));
     shown_list = realloc(shown_list, (itemcount + 1) * sizeof(uint32_t));
     if (!item || !shown_list) {
         LOG_FATAL_ERR(EXIT_MALLOC, "flist", "Could not allocate memory for friend list.");
     }
+    selected_item = &item[sel_idx];
 
-    unsigned int index = itemcount - 1;
+    const uint32_t index = itemcount - 1;
     item[index + 1].type = ITEM_GROUP_CREATE;
     item[index + 1].id_number = UINT32_MAX;
     itemcount++;
