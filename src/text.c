@@ -1,5 +1,6 @@
 #include "text.h"
 
+#include "debug.h"
 #include "macros.h"
 
 #include <ctype.h>
@@ -56,22 +57,23 @@ uint8_t utf8_len(const char *data) {
 
 uint8_t utf8_len_read(const char *data, uint32_t *ch) {
     uint8_t a = data[0];
-    if (!(a & 0x80)) {
+
+    if (!(a & 0x80)) { /* not a multi-byte character */
         *ch = data[0];
         return 1;
     }
 
-    if (!(a & 0x20)) {
+    if (!(a & 0x20)) { /* 110xxxxx */
         *ch = ((data[0] & 0x1F) << 6) | (data[1] & 0x3F);
         return 2;
     }
 
-    if (!(a & 0x10)) {
+    if (!(a & 0x10)) { /* 1110xxxx */
         *ch = ((data[0] & 0xF) << 12) | ((data[1] & 0x3F) << 6) | (data[2] & 0x3F);
         return 3;
     }
 
-    if (!(a & 8)) {
+    if (!(a & 0x08)) { /* 11110xxx */
         *ch = ((data[0] & 0x7) << 18) | ((data[1] & 0x3F) << 12) | ((data[2] & 0x3F) << 6) | (data[3] & 0x3F);
         return 4;
     }
@@ -88,7 +90,7 @@ uint8_t utf8_len_read(const char *data, uint32_t *ch) {
         return 6;
     }
 
-    // never happen
+    LOG_WARN("Text", "utf8_len_read() came across an invalid UTF-8 character. This should probably have not happened.");
     return 0;
 }
 
