@@ -791,7 +791,7 @@ void edit_paste(char *data, int length, bool select) {
         return;
     }
 
-    length = utf8_validate((uint8_t *)data, length);
+    length = utf8_strnlen((uint8_t *)data, length);
 
     const int maxlen = (active_edit->data_size - 1) - active_edit->length + edit_sel.length;
     int newlen = 0, i = 0;
