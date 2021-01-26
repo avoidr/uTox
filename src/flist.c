@@ -1217,11 +1217,16 @@ static void contextmenu_list_onselect(uint8_t i) {
                         show_page(right_mouse_item);
                     }
 
-                    char str[g->name_length + 7];
+                    size_t str_len = strlen("/topic ") + g->name_length;
+                    char *str = calloc(str_len, sizeof(char));
+                    if (!str) {
+                        LOG_FATAL_ERR(EXIT_MALLOC, "F-List", "Couldn't allocate memory for topic command.");
+                    }
                     strcpy(str, "/topic ");
-                    memcpy(str + 7, g->name, g->name_length);
+                    memcpy(str + strlen("/topic "), g->name, g->name_length);
                     edit_setfocus(&edit_chat_msg_group);
-                    edit_paste(str, sizeof(str), 0);
+                    edit_paste(str, str_len, 0);
+                    free(str);
                 } else if (i == 2 && g->av_group) {
                     g->muted = !g->muted;
                 } else {
