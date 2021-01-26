@@ -1351,7 +1351,10 @@ static void outgoing_file_callback_chunk(Tox *tox, uint32_t friend_number, uint3
         }
     } else { // File
         if (ft->via.file) {
-            uint8_t buffer[length];
+            uint8_t *buffer = calloc(length, sizeof(uint8_t));
+            if (!buffer) {
+                LOG_FATAL_ERR(EXIT_MALLOC, "FileTransfer", "Couldn't allocate memory for file buffer.");
+            }
             fseeko(ft->via.file, position, SEEK_SET);
             if (fread(buffer, length, 1, ft->via.file) != 1) {
                 LOG_ERR("FileTransfer", "ERROR READING FILE! (%u & %u)", friend_number, file_number);
@@ -1365,6 +1368,7 @@ static void outgoing_file_callback_chunk(Tox *tox, uint32_t friend_number, uint3
             if (error) {
                 LOG_ERR("FileTransfer", "Outgoing chunk error on file (%u)", error);
             }
+            free(buffer);
         }
         calculate_speed(ft);
     }
