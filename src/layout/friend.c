@@ -107,12 +107,16 @@ static void draw_friend_deletion(int x, int UNUSED(y), int UNUSED(w), int UNUSED
     setfont(FONT_SELF_NAME);
 
     int length = f->name_length + 2;
-    char str[length];
+    char *str = calloc(length, sizeof(char));
+    if (!str) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Friend", "Couldn't allocate memory for friend name.");
+    }
     snprintf(str, length, "%.*s?", (int)f->name_length, f->name);
 
     const int push = UTOX_STR_WIDTH(DELETE_MESSAGE);
     drawstr(x + SCALE(10), SCALE(70), DELETE_MESSAGE);
     drawtextrange(push + x + SCALE(10), settings.window_width, SCALE(70), str, length - 1);
+    free(str);
 }
 
 /* Draw add a friend window */
