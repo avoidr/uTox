@@ -414,11 +414,17 @@ void friend_recvimage(FRIEND *f, NATIVE_IMAGE *native_image, uint16_t width, uin
 }
 
 void friend_notify_msg(FRIEND *f, const char *msg, size_t msg_length) {
-    char title[sizeof("uTox new message from ") + UTOX_FRIEND_NAME_LENGTH(f)];
+    char *title;
+    size_t title_size;
 
-    snprintf((char *)title, sizeof(title), "uTox new message from %.*s",
+    title_size = sizeof("uTox new message from ") + UTOX_FRIEND_NAME_LENGTH(f);
+    title = calloc(title_size, sizeof(char));
+    if (!title) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Friend", "Couldn't allocate memory for notification title.");
+    }
+    snprintf(title, title_size, "uTox new message from %.*s",
              (int)UTOX_FRIEND_NAME_LENGTH(f), UTOX_FRIEND_NAME(f));
-    size_t title_length = strnlen(title, sizeof(title) - 1);
+    size_t title_length = strnlen(title, title_size - 1);
 
     postmessage_utox(FRIEND_MESSAGE, f->number, 0, NULL);
     notify(title, title_length, msg, msg_length, f, 0);
@@ -430,6 +436,8 @@ void friend_notify_msg(FRIEND *f, const char *msg, size_t msg_length) {
     if (flist_get_sel_friend() != f || !have_focus) {
         postmessage_audio(UTOXAUDIO_PLAY_NOTIFICATION, NOTIFY_TONE_FRIEND_NEW_MSG, 0, NULL);
     }
+
+    free(title);
 }
 
 bool friend_set_online(FRIEND *f, bool online) {
@@ -578,15 +586,21 @@ FRIEND *get_friend_by_id(const char *id_str) {
 }
 
 void friend_notify_status(FRIEND *f, const uint8_t *msg, size_t msg_length, char *state) {
+    char *title;
+    size_t title_size;
+
     if (!settings.status_notifications) {
         return;
     }
 
-    char title[UTOX_FRIEND_NAME_LENGTH(f) + SLEN(STATUS_MESSAGE) + strlen(state)];
-
-    snprintf(title, sizeof(title), S(STATUS_MESSAGE),
+    title_size = UTOX_FRIEND_NAME_LENGTH(f) + SLEN(STATUS_MESSAGE) + strlen(state) + 1;
+    title = calloc(title_size, sizeof(char));
+    if (!title) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Friend", "Couldn't allocate memory for notification title.");
+    }
+    snprintf(title, title_size, S(STATUS_MESSAGE),
              (int)UTOX_FRIEND_NAME_LENGTH(f), UTOX_FRIEND_NAME(f), state);
-    size_t title_length = strnlen(title, sizeof(title) - 1);
+    size_t title_length = strnlen(title, title_size - 1);
 
     notify(title, title_length, (char *)msg, msg_length, f, 0);
 
@@ -597,6 +611,8 @@ void friend_notify_status(FRIEND *f, const uint8_t *msg, size_t msg_length, char
     } else {
         postmessage_audio(UTOXAUDIO_PLAY_NOTIFICATION, NOTIFY_TONE_FRIEND_ONLINE, 0, NULL);
     }
+
+    free(title);
 }
 
 bool string_to_id(uint8_t *w, char *a) {
