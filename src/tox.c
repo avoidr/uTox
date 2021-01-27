@@ -80,13 +80,17 @@ void postmessage_toxcore(uint8_t msg, uint32_t param1, uint32_t param2, void *da
 }
 
 static int utox_encrypt_data(void *clear_text, size_t clear_length, uint8_t *cypher_data) {
-    size_t passphrase_length = edit_profile_password.length;
+    uint8_t *passphrase;
+    const size_t passphrase_length = edit_profile_password.length;
 
     if (passphrase_length < 4) {
         return UTOX_ENC_ERR_LENGTH;
     }
 
-    uint8_t passphrase[passphrase_length];
+    passphrase = calloc(passphrase_length, sizeof(uint8_t));
+    if (!passphrase) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Toxcore", "Couldn't allocate memory for passphrase.");
+    }
     memcpy(passphrase, edit_profile_password.data, passphrase_length);
     TOX_ERR_ENCRYPTION err = 0;
 
@@ -96,20 +100,27 @@ static int utox_encrypt_data(void *clear_text, size_t clear_length, uint8_t *cyp
         LOG_FATAL_ERR(EXIT_FAILURE, "Toxcore", "Fatal Error; unable to encrypt data!\n");
     }
 
+    free(passphrase);
+
     return err;
 }
 
 static int utox_decrypt_data(void *cypher_data, size_t cypher_length, uint8_t *clear_text) {
-    size_t passphrase_length = edit_profile_password.length;
+    uint8_t *passphrase;
+    const size_t passphrase_length = edit_profile_password.length;
 
     if (passphrase_length < 4) {
         return UTOX_ENC_ERR_LENGTH;
     }
 
-    uint8_t passphrase[passphrase_length];
+    passphrase = calloc(passphrase_length, sizeof(uint8_t));
+    if (!passphrase) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Toxcore", "Couldn't allocate memory for passphrase.");
+    }
     memcpy(passphrase, edit_profile_password.data, passphrase_length);
     TOX_ERR_DECRYPTION err = 0;
     tox_pass_decrypt((uint8_t *)cypher_data, cypher_length, (uint8_t *)passphrase, passphrase_length, clear_text, &err);
+    free(passphrase);
 
     switch (err) {
         case TOX_ERR_DECRYPTION_OK: return 0;
