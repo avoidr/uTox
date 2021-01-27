@@ -1631,12 +1631,22 @@ bool messages_mup(PANEL *panel) {
                 && m->cursor_over_position <= m->cursor_over_uri + m->urllen - 1 /* - 1 Don't open on white space */
                 && !m->selecting_text)
             {
+                char *url;
+                size_t url_size;
+
                 LOG_TRACE("Messages", "mup dURI %u, oURI %u" , m->cursor_down_uri, m->cursor_over_uri);
-                char url[m->urllen + 1];
+
+                url_size = m->urllen + 1;
+                url = calloc(url_size, sizeof(char));
+                if (!url) {
+                    LOG_FATAL_ERR(EXIT_MALLOC, "Messages", "Couldn't allocate memory for URL.");
+                }
                 memcpy(url, msg->via.txt.msg + m->cursor_over_uri, m->urllen * sizeof(char));
                 url[m->urllen] = 0;
                 openurl(url);
                 m->cursor_down_uri = 0;
+
+                free(url);
             }
         }
     }
