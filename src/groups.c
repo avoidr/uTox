@@ -335,6 +335,8 @@ static size_t group_get_title_size(const Tox *tox, uint32_t group_number) {
 }
 
 void init_groups(Tox *tox) {
+    uint32_t *groups;
+
     self.groups_list_size = tox_conference_get_chatlist_size(tox);
 
     if (self.groups_list_size == 0) {
@@ -347,7 +349,10 @@ void init_groups(Tox *tox) {
         LOG_FATAL_ERR(EXIT_MALLOC, "Groupchats", "Could not allocate memory for groupchat array with size of: %u", self.groups_list_size);
     }
 
-    uint32_t groups[self.groups_list_size];
+    groups = calloc(self.groups_list_size, sizeof(uint32_t));
+    if (!groups) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Groupchats", "Couldn't allocate memory for groupchat array with size of: %u", self.groups_list_size);
+    }
     tox_conference_get_chatlist(tox, groups);
 
     for (size_t i = 0; i < self.groups_list_size; i++) {
@@ -359,10 +364,14 @@ void init_groups(Tox *tox) {
         free(title);
     }
     LOG_INFO("Groupchat", "Initialzied groupchat array with %u groups", self.groups_list_size);
+
+    free(groups);
 }
 
-
 void group_notify_msg(GROUPCHAT *g, const char *msg, size_t msg_length) {
+    char *title;
+    size_t title_size;
+
     if (g->notify == GNOTIFY_NEVER) {
         return;
     }
@@ -371,13 +380,18 @@ void group_notify_msg(GROUPCHAT *g, const char *msg, size_t msg_length) {
         return;
     }
 
-    char title[g->name_length + 25];
-
-    snprintf(title, sizeof(title), "uTox new message in %.*s", g->name_length, g->name);
-    size_t title_length = strnlen(title, sizeof(title) - 1);
+    title_size = sizeof("uTox new message in ") + g->name_length;
+    title = calloc(title_size, sizeof(char));
+    if (!title) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Groupchats", "Couldn't allocate memory for groupchat notification message title.");
+    }
+    snprintf(title, title_size, "uTox new message in %.*s", g->name_length, g->name);
+    size_t title_length = strnlen(title, title_size - 1);
     notify(title, title_length, msg, msg_length, g, 1);
 
     if (flist_get_sel_group() != g) {
         postmessage_audio(UTOXAUDIO_PLAY_NOTIFICATION, NOTIFY_TONE_FRIEND_NEW_MSG, 0, NULL);
     }
+
+    free(title);
 }
