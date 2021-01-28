@@ -97,7 +97,11 @@ static void draw_friend_settings(int x, int y, int UNUSED(width), int UNUSED(hei
 }
 
 static void draw_friend_deletion(int x, int UNUSED(y), int UNUSED(w), int UNUSED(height)) {
-    FRIEND *f = flist_get_sel_friend();
+    FRIEND *f;
+    char *fname;
+    size_t fname_size;
+
+    f = flist_get_sel_friend();
     if (!f) {
         LOG_ERR("Friend", "Could not get selected friend.");
         return;
@@ -106,17 +110,20 @@ static void draw_friend_deletion(int x, int UNUSED(y), int UNUSED(w), int UNUSED
     setcolor(COLOR_MAIN_TEXT);
     setfont(FONT_SELF_NAME);
 
-    int length = f->name_length + 2;
-    char *str = calloc(length, sizeof(char));
-    if (!str) {
-        LOG_FATAL_ERR(EXIT_MALLOC, "Friend", "Couldn't allocate memory for friend name.");
+    fname_size = f->name_length + 2; /* + '?' + '\0' */
+    fname = calloc(fname_size, sizeof(char));
+    if (!fname) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "Friend",
+                      "Couldn't allocate memory for friend name.");
     }
-    snprintf(str, length, "%.*s?", (int)f->name_length, f->name);
+    snprintf(fname, fname_size, "%.*s?", (int)f->name_length, f->name);
 
     const int push = UTOX_STR_WIDTH(DELETE_MESSAGE);
     drawstr(x + SCALE(10), SCALE(70), DELETE_MESSAGE);
-    drawtextrange(push + x + SCALE(10), settings.window_width, SCALE(70), str, length - 1);
-    free(str);
+    drawtextrange(push + x + SCALE(10), settings.window_width, SCALE(70),
+                  fname, fname_size - 1);
+
+    free(fname);
 }
 
 /* Draw add a friend window */
