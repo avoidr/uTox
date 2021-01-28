@@ -235,16 +235,24 @@ static void ugtk_savethread(void *args) {
     FILE_TRANSFER *file = args;
 
     while (1) { // TODO, save current dir, and filename and preload them to gtk dialog if save fails.
+        char *fname;
+        size_t fname_size;
         /* Create a GTK save window */
         void *dialog =
             utoxGTK_file_chooser_dialog_new((const char *)S(WHERE_TO_SAVE_FILE), NULL, GTK_FILE_CHOOSER_ACTION_SAVE,
                                             "_Cancel", GTK_RESPONSE_CANCEL, "_Open", GTK_RESPONSE_ACCEPT, NULL);
         /* Get incoming file name for GTK */
-        char buf[file->name_length + 1];
-        snprintf(buf, file->name_length + 1, "%.*s", (int)file->name_length, file->name);
+        fname_size = file->name_length + 1;
+        fname = calloc(fname_size, sizeof(char));
+        if (!fname) {
+            LOG_FATAL_ERR(EXIT_MALLOC, "GTK", "Couldn't allocate memory for file name.");
+        }
+        snprintf(fname, fname_size, "%.*s", (int)file->name_length, file->name);
 
-        utoxGTK_file_chooser_set_current_name(dialog, buf);
+        utoxGTK_file_chooser_set_current_name(dialog, fname);
         utoxGTK_file_chooser_set_do_overwrite_confirmation(dialog, true);
+        free(fname);
+
         /* Users can create folders when saving. */ // TODO ENABLE BELOW!
         // utoxGTK_file_chooser_set_create_folders(dialog, TRUE);
         int result = utoxGTK_dialog_run(dialog);
