@@ -301,10 +301,15 @@ void sourceplaybuffer(unsigned int f, const int16_t *data, int samples, uint8_t 
     alSourcei(source, AL_LOOPING, AL_FALSE);
 
     if (processed) {
-        ALuint bufids[processed];
+        ALuint *bufids = calloc(processed, sizeof(ALuint));
+        if (!bufids) {
+            LOG_FATAL_ERR(EXIT_MALLOC, "uTox Audio",
+                          "Couldn't allocate memory for AL buffer IDs.");
+        }
         alSourceUnqueueBuffers(source, processed, bufids);
         alDeleteBuffers(processed - 1, bufids + 1);
         bufid = bufids[0];
+        free(bufids);
     } else if (queued < 16) {
         alGenBuffers(1, &bufid);
     } else {
@@ -580,6 +585,8 @@ void postmessage_audio(uint8_t msg, uint32_t param1, uint32_t param2, void *data
 
 // TODO: This function is 300 lines long. Cut it up.
 void utox_audio_thread(void *args) {
+    uint8_t *buf;
+    size_t buf_size;
     time_t close_device_time = 0;
     ToxAV *av = args;
 
@@ -593,8 +600,13 @@ void utox_audio_thread(void *args) {
     // bool call[MAX_CALLS] = {0}, preview = 0;
 
     const int perframe = (UTOX_DEFAULT_FRAME_A * UTOX_DEFAULT_SAMPLE_RATE_A) / 1000;
-    uint8_t buf[perframe * 2 * UTOX_DEFAULT_AUDIO_CHANNELS]; //, dest[perframe * 2 * UTOX_DEFAULT_AUDIO_CHANNELS];
-    memset(buf, 0, sizeof(buf));
+    // uint8_t dest[perframe * 2 * UTOX_DEFAULT_AUDIO_CHANNELS];
+    buf_size = perframe * 2 * UTOX_DEFAULT_AUDIO_CHANNELS;
+    buf = calloc(buf_size, sizeof(uint8_t));
+    if (!buf) {
+        LOG_FATAL_ERR(EXIT_MALLOC, "uTox Audio",
+                      "Couldn't allocate memory for audio buffer.");
+    }
 
     LOG_TRACE("uTox Audio", "frame size: %u" , perframe);
 
@@ -922,6 +934,7 @@ void utox_audio_thread(void *args) {
     audio_thread_msg       = 0;
     utox_audio_thread_init = false;
     free(preview_buffer);
+    free(buf);
     LOG_TRACE("uTox Audio", "Clean thread exit!");
 }
 
@@ -965,10 +978,15 @@ void callback_av_group_audio(void *UNUSED(tox), uint32_t groupnumber, uint32_t p
     alSourcei(g->source[peernumber], AL_LOOPING, AL_FALSE);
 
     if (processed) {
-        ALuint bufids[processed];
+        ALuint *bufids = calloc(processed, sizeof(ALuint));
+        if (!bufids) {
+            LOG_FATAL_ERR(EXIT_MALLOC, "uTox Audio",
+                          "Couldn't allocate memory for AL buffer IDs.");
+        }
         alSourceUnqueueBuffers(g->source[peernumber], processed, bufids);
         alDeleteBuffers(processed - 1, bufids + 1);
         bufid = bufids[0];
+        free(bufids);
     } else if(queued < 16) {
         alGenBuffers(1, &bufid);
     } else {
